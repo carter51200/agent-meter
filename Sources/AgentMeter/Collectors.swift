@@ -27,6 +27,7 @@ final class RequestPolicy: NSObject, URLSessionDelegate, URLSessionTaskDelegate 
 
 enum Collectors {
     static let home = FileManager.default.homeDirectoryForCurrentUser
+    private static let keychainLock = NSLock()
     static func session(loopback: Bool = false) -> URLSession {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = loopback ? 2 : 12
@@ -104,6 +105,19 @@ enum Collectors {
         if !allowPrompt {
             let context = LAContext(); context.interactionNotAllowed = true
             query[kSecUseAuthenticationContext as String] = context
+            // Classic application-access ACL dialogs also need the UI-fail policy.
+            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+        }
+        // Claude Code can use the classic login keychain, where the modern
+        // authentication-context policy alone does not suppress ACL prompts.
+        // Serialize our reads and restore this process's interaction policy.
+        keychainLock.lock()
+        var previousInteraction: DarwinBoolean = true
+        let restoreInteraction = !allowPrompt && SecKeychainGetUserInteractionAllowed(&previousInteraction) == errSecSuccess
+        if restoreInteraction { SecKeychainSetUserInteractionAllowed(false) }
+        defer {
+            if restoreInteraction { SecKeychainSetUserInteractionAllowed(previousInteraction.boolValue) }
+            keychainLock.unlock()
         }
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
