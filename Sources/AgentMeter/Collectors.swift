@@ -84,7 +84,7 @@ enum Collectors {
         }
         var request = URLRequest(url: URL(string: "https://chatgpt.com/backend-api/wham/usage")!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("AgentMeter/0.3.1", forHTTPHeaderField: "User-Agent")
+        request.setValue("AgentMeter/0.3.2", forHTTPHeaderField: "User-Agent")
         if let account = tokens["account_id"] as? String { request.setValue(account, forHTTPHeaderField: "ChatGPT-Account-Id") }
         return UsageParser.codex(try await requestJSON(request))
     }
@@ -129,7 +129,7 @@ enum Collectors {
         var request = URLRequest(url: URL(string: "https://api.anthropic.com/api/oauth/usage")!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
-        request.setValue("AgentMeter/0.3.1", forHTTPHeaderField: "User-Agent")
+        request.setValue("AgentMeter/0.3.2", forHTTPHeaderField: "User-Agent")
         return UsageParser.claude(try await requestJSON(request))
     }
 

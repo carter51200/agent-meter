@@ -4,7 +4,7 @@ Codex, Claude Code, Antigravity의 **계정 잔여 한도**를 보여주는 한�
 
 ## 다운로드
 
-**[macOS 설치 ZIP 다운로드](https://github.com/carter51200/agent-meter/releases/download/v0.3.1/Agent-Meter.zip)** · [릴리스 안내](https://github.com/carter51200/agent-meter/releases/tag/v0.3.1)
+**[macOS 설치 ZIP 다운로드](https://github.com/carter51200/agent-meter/releases/download/v0.3.2/Agent-Meter.zip)** · [릴리스 안내](https://github.com/carter51200/agent-meter/releases/tag/v0.3.2)
 
 초기 테스트 버전입니다. Apple 개발자 ID 서명·공증은 아직 없으며, 다른 맥에서 설치 시 macOS가 실행을 차단할 수 있습니다. 각 사용자의 계정을 연결해야 하며 배포 파일에는 로그인 정보가 들어 있지 않습니다.
 
@@ -77,3 +77,5 @@ Codex는 [CodexBar의 단색 Codex/OpenAI 심벌](https://github.com/steipete/Co
 - Mac mini 및 다른 MacBook에서의 설치와 로그인 연결은 아직 확인하지 않았습니다.
 
 2026-10-13, 요금제 표시 기능을 제거하고 사용량 조회만 제공하는 v0.3.1을 배포했습니다. 사용량 파서 검사 11개를 확인했습니다. 배포 ZIP에는 앱과 리소스만 포함되며 `.build`, 로그, 개인 작업 폴더와 인증 파일은 포함하지 않습니다.
+
+같은 날 공개 커밋 기록과 이전 배포 ZIP을 점검해 토큰·API 키·인증 파일을 발견하지 못했습니다. 실행 파일의 심볼 정보에 남아 있던 빌드 기기의 사용자 폴더 경로를 v0.3.2에서 제거했습니다. 빌드 스크립트는 배포 전 디버그·로컬 심볼을 제거합니다.

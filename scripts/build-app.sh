@@ -7,6 +7,8 @@ binary_dir="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)
 app_dir="$project_dir/dist/Agent Meter.app"
 mkdir -p "$app_dir/Contents/MacOS" "$app_dir/Contents/Resources"
 cp "$binary_dir/AgentMeter" "$app_dir/Contents/MacOS/AgentMeter"
+# Remove debug/local symbol entries that contain the build machine's paths.
+strip -S -x "$app_dir/Contents/MacOS/AgentMeter"
 swift "$project_dir/scripts/render-brand.swift" "$project_dir/Assets/codex-template.svg" "$project_dir/Assets/codex-template.png"
 for resource in codex-template.png claude.png antigravity-template.png; do
     cp "$project_dir/Assets/$resource" "$app_dir/Contents/Resources/"
@@ -26,8 +28,8 @@ cat > "$app_dir/Contents/Info.plist" <<'PLIST'
 <key>CFBundleDisplayName</key><string>Agent Meter</string>
 <key>CFBundleIconFile</key><string>AgentMeter</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.3.1</string>
-<key>CFBundleVersion</key><string>4</string>
+<key>CFBundleShortVersionString</key><string>0.3.2</string>
+<key>CFBundleVersion</key><string>5</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
