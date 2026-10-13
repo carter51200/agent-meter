@@ -51,14 +51,14 @@ enum Collectors {
     }
     static func fetch(_ provider: Provider, allowKeychainPrompt: Bool = false, forceCLI: Bool = false) async -> Snapshot {
         do {
-            if forceCLI && provider != .codex { return try await cliSnapshot(provider) }
+            if forceCLI && provider != .codex { return try await TerminalProbe.fetch(provider) }
             switch provider {
             case .codex: return try await codex()
             case .claude:
                 do { return try await claude(allowPrompt: allowKeychainPrompt) }
                 catch {
                     guard TerminalProbe.workspace(.claude) != nil else { throw error }
-                    return try await cliSnapshot(.claude)
+                    return try await TerminalProbe.fetch(.claude)
                 }
             case .antigravity:
                 // Configured CLI workspaces support current agy builds whose local API is private.
@@ -74,14 +74,6 @@ enum Collectors {
             return Snapshot(provider: provider, issue: message)
         }
     }
-    static func cliSnapshot(_ provider: Provider) async throws -> Snapshot {
-        var snapshot = try await TerminalProbe.fetch(provider)
-        if provider == .claude, let auth = try? claudeCredential(allowPrompt: false), let oauth = auth["claudeAiOauth"] as? [String: Any],
-           let plan = UsageParser.claudePlan(oauth) {
-            snapshot.plan = plan; snapshot.planSource = "로그인 정보에 기록된 요금제 · 변경 후 재로그인이 필요할 수 있어요."
-        }
-        return snapshot
-    }
     static func codex() async throws -> Snapshot {
         let folder = ProcessInfo.processInfo.environment["CODEX_HOME"].map { URL(fileURLWithPath: $0) } ?? home.appendingPathComponent(".codex")
         let auth: [String: Any]
@@ -92,7 +84,7 @@ enum Collectors {
         }
         var request = URLRequest(url: URL(string: "https://chatgpt.com/backend-api/wham/usage")!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("AgentMeter/0.3", forHTTPHeaderField: "User-Agent")
+        request.setValue("AgentMeter/0.3.1", forHTTPHeaderField: "User-Agent")
         if let account = tokens["account_id"] as? String { request.setValue(account, forHTTPHeaderField: "ChatGPT-Account-Id") }
         return UsageParser.codex(try await requestJSON(request))
     }
@@ -137,12 +129,10 @@ enum Collectors {
         var request = URLRequest(url: URL(string: "https://api.anthropic.com/api/oauth/usage")!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
-        request.setValue("AgentMeter/0.3", forHTTPHeaderField: "User-Agent")
-        var snapshot = UsageParser.claude(try await requestJSON(request))
-        snapshot.plan = UsageParser.claudePlan(oauth)
-        snapshot.planSource = "로그인 정보에 기록된 요금제 · 변경 후 재로그인이 필요할 수 있어요."
-        return snapshot
+        request.setValue("AgentMeter/0.3.1", forHTTPHeaderField: "User-Agent")
+        return UsageParser.claude(try await requestJSON(request))
     }
+
     static func command(_ path: String, _ arguments: [String], timeout: Double = 4) async throws -> String {
         try await Task.detached {
             let process = Process(); process.executableURL = URL(fileURLWithPath: path); process.arguments = arguments
@@ -204,18 +194,8 @@ enum Collectors {
                     if !token.isEmpty { request.setValue(token, forHTTPHeaderField: "X-Codeium-Csrf-Token") }
                     request.httpBody = try JSONSerialization.data(withJSONObject: ["metadata": ["ideName": "antigravity", "extensionName": "antigravity", "locale": "en", "ideVersion": "unknown"]])
                     if let json = try? await requestJSON(request, loopback: true) {
-                        var snapshot = UsageParser.antigravity(json)
-                        if !snapshot.quotas.isEmpty {
-                            if snapshot.plan == nil, method == "RetrieveUserQuotaSummary", Date() < deadline {
-                                var statusRequest = request
-                                statusRequest.url = URL(string: "\(scheme)://127.0.0.1:\(port)/exa.language_server_pb.LanguageServerService/GetUserStatus")!
-                                if let status = try? await requestJSON(statusRequest, loopback: true) {
-                                    let identity = UsageParser.antigravity(status)
-                                    snapshot.plan = identity.plan; snapshot.planSource = identity.planSource
-                                }
-                            }
-                            return snapshot
-                        }
+                        let snapshot = UsageParser.antigravity(json)
+                        if !snapshot.quotas.isEmpty { return snapshot }
                     }
                 }
             }

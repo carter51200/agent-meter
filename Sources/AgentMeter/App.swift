@@ -123,12 +123,7 @@ struct ProviderSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 ProviderLogo(provider: snapshot.provider)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(snapshot.provider.title).font(.system(size: 13, weight: .semibold))
-                    Text(snapshot.plan.map { "요금제 · " + $0 } ?? "요금제 확인 안 됨")
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
-                        .help(snapshot.plan == nil ? "서비스가 요금제 정보를 제공하지 않았어요. 한도로 요금제를 추정하지 않습니다." : (snapshot.planSource ?? "서비스가 제공한 요금제"))
-                }
+                Text(snapshot.provider.title).font(.system(size: 13, weight: .semibold))
                 Spacer()
                 if let remaining = snapshot.minimum {
                     Text("\(Int(remaining.rounded()))%").font(.system(size: 13, weight: .semibold)).monospacedDigit()

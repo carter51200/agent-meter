@@ -31,49 +31,14 @@ public struct Snapshot: Identifiable, Codable, Sendable {
     public var updatedAt: Date?
     public var issue: String?
     public var account: String?
-    public var plan: String?
-    public var planSource: String?
     public var minimum: Double? { quotas.map(\.remaining).min() }
-    public init(provider: Provider, quotas: [Quota] = [], source: String = "", updatedAt: Date? = nil, issue: String? = nil, account: String? = nil, plan: String? = nil, planSource: String? = nil) {
+    public init(provider: Provider, quotas: [Quota] = [], source: String = "", updatedAt: Date? = nil, issue: String? = nil, account: String? = nil) {
         self.provider = provider; self.quotas = quotas; self.source = source
         self.updatedAt = updatedAt; self.issue = issue; self.account = account
-        self.plan = plan; self.planSource = planSource
     }
 }
 
 public enum UsageParser {
-    public static func planLabel(_ raw: Any?) -> String? {
-        guard let text = raw as? String else { return nil }
-        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty, value.count <= 80, !value.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }),
-              !["unknown", "none", "null", "unspecified"].contains(value.lowercased()) else { return nil }
-        let names = ["free": "Free", "plus": "Plus", "pro": "Pro", "max": "Max", "team": "Team", "business": "Business", "enterprise": "Enterprise", "edu": "Edu", "go": "Go"]
-        return names[value.lowercased()] ?? value
-    }
-    public static func claudePlan(_ oauth: [String: Any]) -> String? {
-        let tier = oauth["rateLimitTier"] as? String ?? oauth["rate_limit_tier"] as? String ?? ""
-        if let type = planLabel(oauth["subscriptionType"] ?? oauth["subscription_type"]) {
-            // Team/Enterprise can carry Max rate limits; the explicit subscription type wins.
-            if type == "Max" {
-                if tier.hasSuffix("_20x") { return "Max 20×" }
-                if tier.hasSuffix("_5x") { return "Max 5×" }
-            }
-            return type
-        }
-        for (key, label) in [("max_20x", "Max 20×"), ("max_5x", "Max 5×"), ("max", "Max"), ("pro", "Pro"), ("team", "Team"), ("enterprise", "Enterprise")] {
-            if tier == "default_claude_" + key { return label }
-        }
-        return nil
-    }
-    public static func terminalPlan(_ raw: String) -> String? {
-        let text = TerminalScreen.render(raw)
-        for line in text.components(separatedBy: .newlines) {
-            let value = line.trimmingCharacters(in: .whitespaces)
-            if let label = capture("^(?:subscription(?: plan)?|account plan|plan|tier)\\s*:\\s*(.+)$", from: value)?.first,
-               let plan = planLabel(label) { return plan }
-        }
-        return nil
-    }
     public static func terminalText(_ raw: String) -> String {
         var value = raw
         for pattern in ["\\u{001B}\\][^\\u{0007}]*(?:\\u{0007}|\\u{001B}\\\\)", "\\u{001B}\\[[0-?]*[ -/]*[@-~]"] {
@@ -120,8 +85,7 @@ public enum UsageParser {
         }
         append()
         return Snapshot(provider: .antigravity, quotas: quotas, source: "계정 한도 · agy /usage", updatedAt: now,
-                        issue: quotas.isEmpty ? "CLI 사용량 화면에서 측정값을 읽지 못했어요." : nil,
-                        plan: terminalPlan(raw), planSource: "CLI에 표시된 요금제")
+                        issue: quotas.isEmpty ? "CLI 사용량 화면에서 측정값을 읽지 못했어요." : nil)
     }
     public static func claudeTerminal(_ raw: String, now: Date = Date()) -> Snapshot {
         let text = TerminalScreen.render(raw)
@@ -142,8 +106,7 @@ public enum UsageParser {
             }
         }
         return Snapshot(provider: .claude, quotas: quotas, source: "계정 한도 · claude /usage", updatedAt: now,
-                        issue: quotas.isEmpty ? "CLI 사용량 화면에서 측정값을 읽지 못했어요." : nil,
-                        plan: terminalPlan(raw), planSource: "CLI에 표시된 요금제")
+                        issue: quotas.isEmpty ? "CLI 사용량 화면에서 측정값을 읽지 못했어요." : nil)
     }
     public static func object(_ data: Data) throws -> [String: Any] {
         guard let value = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw ParseError.invalid }
@@ -195,7 +158,7 @@ public enum UsageParser {
             }
         }
         return Snapshot(provider: .codex, quotas: quotas, source: "계정 한도 · Codex 로그인", updatedAt: now,
-                        issue: quotas.isEmpty ? "이 계정은 조회 가능한 한도를 반환하지 않았어요." : nil, account: root["email"] as? String, plan: planLabel(root["plan_type"]), planSource: "사용량 서버가 반환한 요금제")
+                        issue: quotas.isEmpty ? "이 계정은 조회 가능한 한도를 반환하지 않았어요." : nil, account: root["email"] as? String)
     }
     public static func claude(_ root: [String: Any], now: Date = Date()) -> Snapshot {
         var quotas: [Quota] = []
@@ -239,7 +202,6 @@ public enum UsageParser {
             }
         }
         return Snapshot(provider: .antigravity, quotas: quotas, source: "계정 한도 · 로컬 Antigravity", updatedAt: now,
-                        issue: quotas.isEmpty ? "Antigravity가 측정 가능한 한도를 반환하지 않았어요." : nil, account: status["email"] as? String,
-                        plan: planLabel((status["userTier"] as? [String: Any])?["name"]), planSource: "Antigravity 서버의 계정 등급")
+                        issue: quotas.isEmpty ? "Antigravity가 측정 가능한 한도를 반환하지 않았어요." : nil, account: status["email"] as? String)
     }
 }

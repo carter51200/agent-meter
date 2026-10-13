@@ -3,31 +3,6 @@ import MenuBarCore
 
 struct UsageTests {
     func parse(_ json: String) throws -> [String: Any] { try UsageParser.object(Data(json.utf8)) }
-    func testReportedCodexPlanAndUnknownPlan() throws {
-        let reported = try parse(#"{"plan_type":"pro"}"#)
-        expect(UsageParser.codex(reported).plan == "Pro")
-        expect(UsageParser.codex([:]).plan == nil)
-        expect(UsageParser.planLabel("unknown") == nil)
-        expect(UsageParser.planLabel(true) == nil)
-    }
-    func testClaudeSubscriptionTypeWinsOverRateLimit() {
-        expect(UsageParser.claudePlan(["subscriptionType": "team", "rateLimitTier": "default_claude_max_5x"]) == "Team")
-        expect(UsageParser.claudePlan(["subscriptionType": "max", "rateLimitTier": "default_claude_max_20x"]) == "Max 20×")
-        expect(UsageParser.claudePlan(["rateLimitTier": "default_claude_max_5x"]) == "Max 5×")
-        expect(UsageParser.claudePlan(["rateLimitTier": "default_claude_ai"]) == nil)
-    }
-    func testAntigravitySubscriptionIsNotInternalPlanName() throws {
-        let json = #"{"userStatus":{"planStatus":{"planInfo":{"planName":"Pro"}},"userTier":{"name":"Google AI Ultra"}}}"#
-        let reported = try parse(json)
-        expect(UsageParser.antigravity(reported).plan == "Google AI Ultra")
-        let internalOnly = try parse(#"{"userStatus":{"planStatus":{"planInfo":{"planName":"Pro"}}}}"#)
-        expect(UsageParser.antigravity(internalOnly).plan == nil)
-    }
-    func testTerminalPlanRequiresExplicitSubscriptionLabel() {
-        expect(UsageParser.terminalPlan("Plan: Google AI Pro\nModels & Quota") == "Google AI Pro")
-        expect(UsageParser.terminalPlan("Gemini Pro\nWeekly Limit Remaining\n100%") == nil)
-        expect(UsageParser.terminalPlan("Plan: unknown") == nil)
-    }
     func testCodexWeeklyPrimaryIsNotMislabeledAsFiveHour() throws {
         let root = try parse(#"{"rate_limit":{"primary_window":{"used_percent":25,"limit_window_seconds":604800,"reset_at":1792300946},"secondary_window":null}}"#)
         let snapshot = UsageParser.codex(root)
@@ -121,10 +96,6 @@ func expect(_ condition: @autoclosure () -> Bool, file: StaticString = #filePath
 @main struct ParserChecks {
     static func main() throws {
         let tests = UsageTests()
-        try tests.testReportedCodexPlanAndUnknownPlan()
-        tests.testClaudeSubscriptionTypeWinsOverRateLimit()
-        try tests.testAntigravitySubscriptionIsNotInternalPlanName()
-        tests.testTerminalPlanRequiresExplicitSubscriptionLabel()
         try tests.testCodexWeeklyPrimaryIsNotMislabeledAsFiveHour()
         try tests.testCodexIndependentWindowsAndAdditionalModel()
         try tests.testUnknownAndInvalidValuesNeverBecomeZeroOrFull()
@@ -136,6 +107,6 @@ func expect(_ condition: @autoclosure () -> Bool, file: StaticString = #filePath
         tests.testAntigravityTerminalGroupsWithANSI()
         tests.testTerminalFallbackUsesOnlyQuotaScreens()
         tests.testTerminalRedrawUsesLatestDigitsAndNamedModel()
-        print("PASS: 15 quota and subscription parser checks (period labels, unknown values, exhaustion, grouped quotas, reset dates, terminal redraws)")
+        print("PASS: 11 quota parser checks (period labels, unknown values, exhaustion, grouped quotas, reset dates, terminal redraws)")
     }
 }

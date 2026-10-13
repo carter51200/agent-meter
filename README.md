@@ -4,7 +4,7 @@ Codex, Claude Code, Antigravity의 **계정 잔여 한도**를 보여주는 한�
 
 ## 다운로드
 
-**[macOS 설치 ZIP 다운로드](https://github.com/carter51200/agent-meter/releases/download/v0.3.0/Agent-Meter.zip)** · [릴리스 안내](https://github.com/carter51200/agent-meter/releases/tag/v0.3.0)
+**[macOS 설치 ZIP 다운로드](https://github.com/carter51200/agent-meter/releases/download/v0.3.1/Agent-Meter.zip)** · [릴리스 안내](https://github.com/carter51200/agent-meter/releases/tag/v0.3.1)
 
 초기 테스트 버전입니다. Apple 개발자 ID 서명·공증은 아직 없으며, 다른 맥에서 설치 시 macOS가 실행을 차단할 수 있습니다. 각 사용자의 계정을 연결해야 하며 배포 파일에는 로그인 정보가 들어 있지 않습니다.
 
@@ -26,16 +26,6 @@ Codex, Claude Code, Antigravity의 **계정 잔여 한도**를 보여주는 한�
 **Claude Code:** `~/.claude/.credentials.json` 또는 macOS의 `Claude Code-credentials` 키체인 항목을 읽습니다. `CLAUDE_CONFIG_DIR`는 터미널 실행 시 지원합니다. ‘Claude 연결’을 직접 눌렀을 때만 키체인 허용 창을 띄웁니다. 자동 갱신은 키체인 허용 창을 띄우지 않습니다. CLI에 로그인하려면 `claude` 안에서 `/login`을 실행하세요. 로그인 토큰이 만료되면 ‘CLI 연결’에서 Claude Code에 이미 로그인하고 신뢰한 작업 폴더를 선택할 수 있습니다. 앱이 해당 폴더에서 일회성 `claude /usage` 화면을 조회하여 CLI가 자신의 로그인을 갱신하도록 합니다. API 키 방식이면 구독 한도를 가져올 수 없습니다.
 
 **Antigravity (실험적):** ‘CLI 연결’에서 `agy`에 이미 로그인하고 신뢰한 작업 폴더를 선택하세요. 앱은 해당 폴더에서 일회성 터미널을 열어 `/usage`만 실행하고 종료합니다. 최신 CLI의 외부 API 제한을 피하면서 Gemini 및 Claude + GPT의 주간·5시간 한도를 읽습니다. 연결된 폴더가 없으면 실행 중인 Antigravity 로컬 서버를 읽습니다. 단순 모델 사용 가능 여부를 100% 한도로 표시하지 않습니다. 새 계정 로그인이나 OAuth 원격 fallback은 포함하지 않습니다.
-
-## 요금제 표시
-
-서비스 이름 아래 요금제를 표시합니다.
-
-- Codex: 사용량 응답의 `plan_type`을 사용합니다.
-- Claude Code: 로그인 정보의 `subscriptionType`을 우선하며 Max 5×/20×도 구분합니다. Team 계정의 한도 등급이 Max여도 요금제를 Team으로 표시합니다. 이 정보는 로그인 시 기록되므로 요금제 변경 후 재로그인이 필요할 수 있습니다.
-- Antigravity: 서버가 제공하는 `userTier.name` 또는 CLI 화면의 명시적인 요금제 라벨을 사용합니다. 현재 `agy /usage` 화면이 요금제를 제공하지 않으면 **요금제 확인 안 됨**으로 표시합니다. 내부 `planInfo.planName`이나 모델 이름·잔여 한도로 Google AI 요금제를 추정하지 않습니다.
-
-Claude가 CLI로 사용량을 조회해도 키체인 접근이 허용되지 않으면 요금제는 확인되지 않을 수 있습니다. 설정의 **Claude Code 연결…**에서 접근을 허용해 주세요. 자동 갱신은 허용 창을 기다리며 멈추지 않습니다.
 
 ## 개인정보와 한계
 
@@ -86,4 +76,4 @@ Codex는 [CodexBar의 단색 Codex/OpenAI 심벌](https://github.com/steipete/Co
 - macOS 기본 메뉴 열기·Esc 닫기, 실계정 한도 표시, 미리보기 창을 닫은 뒤 메뉴 막대 프로세스 유지.
 - Mac mini 및 다른 MacBook에서의 설치와 로그인 연결은 아직 확인하지 않았습니다.
 
-2026-10-13, 요금제 판별 검사 4개를 추가해 총 15개 검사로 확대했습니다. 배포 ZIP에는 앱과 리소스만 포함되며 `.build`, 로그, 개인 작업 폴더와 인증 파일은 포함하지 않습니다.
+2026-10-13, 요금제 표시 기능을 제거하고 사용량 조회만 제공하는 v0.3.1을 배포했습니다. 사용량 파서 검사 11개를 확인했습니다. 배포 ZIP에는 앱과 리소스만 포함되며 `.build`, 로그, 개인 작업 폴더와 인증 파일은 포함하지 않습니다.
