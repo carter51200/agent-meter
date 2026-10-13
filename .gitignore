@@ -1,0 +1,13 @@
+.build/
+.DS_Store
+dist/
+tmp/
+output/
+.env
+.env.*
+*.log
+*.dSYM/
+# Earlier color icon references; the app uses template icons only.
+Assets/codex.png
+Assets/codex-dark.png
+Assets/antigravity.png
